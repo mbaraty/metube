@@ -1,0 +1,14 @@
+{% extends "base_generic.html" %}
+{% block content %}
+    <p>Welcome home!</p>
+    {% if vid_list %}
+        <ul>
+        {% for vid in vid_list %}
+        <li>
+            <a href="{{ vid.get_watch_url }}">{{ vid.title }}</a>
+            Uploaded by {{ vid.uploaded_by.username }} on {{ vid.uploaded_on }}
+        </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+{% endblock %}

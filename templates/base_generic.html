@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{% block title %}MeTube{% endblock %}</title>
+        {% load bootstrap5 %}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+        {% bootstrap_messages %}
+    </head>
+    <body>
+    <div class="navbar navbar-expand-sm navbar-light bg-light">
+        <a href="/" class="navbar-brand fg-dark">MeTube</a>
+        {% if user.is_authenticated %}
+            <div class="navbar-item">User: {{ user.get_username }}</div>
+            <a class="navbar-item mx-2" href="{% url 'users:profile' %}">Profile</a>
+            <a class="navbar-item mx-2" href="{% url 'videos:upload' %}">Upload</a>
+            <div class="navbar-item">
+                <form id="logout-form" method="post" action="{% url 'users:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link">Logout</button>
+                </form>
+            </div>
+        {% else %}
+            <a class="navbar-item mx-2" href="{% url 'users:login' %}?next={% url 'index' %}">Login</a>
+            <a class="navbar-item mx-2" href="{% url 'users:signup' %}?next={%  url "users:login" %}">Register</a>
+        {% endif %}
+    </div>
+        {% block content %}{% endblock %}
+    </body>
+</html>

@@ -1,0 +1,12 @@
+{%  extends "base_generic.html" %}
+
+{%  block content %}
+    <video width="720" height="auto" controls>
+        <source src="{{ vid.get_stream_url }}">
+
+    </video>
+    <h2>{{ vid.title }}</h2>
+    <h5>Uploaded by {{ vid.uploaded_by.username}} on {{vid.uploaded_on}}</h5>
+    <p>{{ vid.description }}</p>
+
+{% endblock %}
