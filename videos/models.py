@@ -15,9 +15,12 @@ class Video(models.Model):
     thumbnail_file = models.FileField(upload_to="thumbnails/%Y/%m/%d/", null=True, blank=True)
     duration_sec = models.IntegerField(default=0)
     visibility = models.CharField(choices=[('public', 'Public'), ('unlisted', 'Unlisted'), ('private', 'Private')], default='public', max_length=10)
+    num_likes = models.IntegerField(default=0)
+    num_comments = models.IntegerField(default=0)
 
     def get_watch_url(self):
         return "/videos/watch/"+str(self.id)
 
     def get_stream_url(self):
         return MEDIA_URL + str(self.video_file)
+

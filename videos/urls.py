@@ -5,5 +5,6 @@ from videos import views
 app_name = "videos"
 urlpatterns = [
     path('upload', views.upload_video, name="upload"),
-    path('watch/<int:pk>', views.watch_video, name="watch")
+    path('watch/<int:pk>', views.watch_video, name="watch"),
+    path('delete/<int:pk>', views.delete_video, name="delete")
 ]

@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-uuyyt_tuzl3gq@kv#%&hoa%@70p5a+k9_h5ui=)r*hl%2q9ebp
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["code-server"]
+ALLOWED_HOSTS = ["code-server", "localhost", "127.0.0.1"]
 CSRF_TRUSTED_ORIGINS = ["http://code-server:8080"]
 
 
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'comments',
     'playlists',
     'search',
+    'likes',
     'bootstrap5',
     'django.contrib.admin',
     'django.contrib.auth',
