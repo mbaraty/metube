@@ -16,8 +16,8 @@
     {% if recommended_vids %}
         <h3>Recommended for you</h3>
         <ul>
-        {% for vid in recommended_vids %}
-            <li><a href="{{ vid.get_watch_url }}">{{ vid.title }}</a> ({{ vid.num_likes }} likes)</li>
+        {% for rec in recommended_vids %}
+            <li><a href="{{ rec.video.get_watch_url }}">{{ rec.video.title }}</a> — {{ rec.reason }}</li>
         {% endfor %}
         </ul>
     {% endif %}

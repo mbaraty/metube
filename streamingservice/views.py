@@ -1,7 +1,7 @@
 from django.views import generic
 
-from users.models import Subscription
 from videos.models import Video
+from streamingservice.recommendations import get_recommendations_for_user
 
 
 class IndexView(generic.ListView):
@@ -12,17 +12,6 @@ class IndexView(generic.ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        recommendations = Video.objects.filter(visibility='public').order_by('-num_likes', '-views', '-uploaded_on')[:10]
-
-        if self.request.user.is_authenticated:
-            subscribed_ids = Subscription.objects.filter(
-                subscriber=self.request.user
-            ).values_list('creator_id', flat=True)
-            personalized = Video.objects.filter(
-                visibility='public', uploaded_by_id__in=subscribed_ids
-            ).order_by('-uploaded_on')[:10]
-            if personalized:
-                recommendations = personalized
-
+        recommendations = get_recommendations_for_user(self.request.user, limit=10)
         context['recommended_vids'] = recommendations
         return context
