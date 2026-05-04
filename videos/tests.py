@@ -1,3 +1,46 @@
-from django.test import TestCase
+from unittest import mock
 
-# Create your tests here.
+from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import Client, TestCase
+from django.utils import timezone
+
+import utils
+from videos.models import Video
+
+
+class VideoProcessingTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username='uploader', password='pass12345')
+
+    def test_process_uploaded_video_sets_completed_and_thumbnail(self):
+        vid = Video.objects.create(
+            title='vid',
+            description='desc',
+            uploaded_by=self.user,
+            uploaded_on=timezone.now(),
+            video_file='videos/sample.mp4',
+        )
+
+        utils.process_uploaded_video(vid)
+        vid.refresh_from_db()
+
+        self.assertEqual(vid.transcode_status, 'completed')
+        self.assertIn('thumbnails/generated/sample.mp4.jpg', str(vid.thumbnail_file))
+
+    def test_upload_view_calls_processing(self):
+        client = Client()
+        client.login(username='uploader', password='pass12345')
+        video_blob = SimpleUploadedFile('upload.mp4', b'fake video bytes', content_type='video/mp4')
+
+        with mock.patch('videos.views.utils.process_uploaded_video') as mocked_processor:
+            response = client.post('/videos/upload', {
+                'title': 'Uploaded title',
+                'description': 'Uploaded description',
+                'video_file': video_blob,
+            })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/')
+        self.assertEqual(Video.objects.count(), 1)
+        mocked_processor.assert_called_once()
