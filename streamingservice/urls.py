@@ -24,5 +24,6 @@ urlpatterns = [
     path('accounts/', include('users.urls')),
     path('videos/', include('videos.urls')),
     path('likes/', include('likes.urls')),
+    path('comments/', include('comments.urls')),
     path('', views.IndexView.as_view(), name='index'),
 ]

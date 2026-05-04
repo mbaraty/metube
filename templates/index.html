@@ -1,13 +1,32 @@
 {% extends "base_generic.html" %}
 {% block content %}
     <p>Welcome home!</p>
+
+    <form method="get" action="/">
+        <input type="text" name="q" placeholder="Search videos" value="{{ query }}">
+        <select name="sort">
+            <option value="latest" {% if sort == 'latest' %}selected{% endif %}>Latest</option>
+            <option value="popular" {% if sort == 'popular' %}selected{% endif %}>Popular</option>
+        </select>
+        <button type="submit">Apply</button>
+    </form>
+
+    {% if subscription_vids %}
+        <h3>From your subscriptions</h3>
+        <ul>
+            {% for vid in subscription_vids %}
+                <li><a href="{{ vid.get_watch_url }}">{{ vid.title }}</a> by {{ vid.uploaded_by.username }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
     {% if vid_list %}
         <h3>Latest uploads</h3>
         <ul>
         {% for vid in vid_list %}
         <li>
             <a href="{{ vid.get_watch_url }}">{{ vid.title }}</a>
-            Uploaded by {{ vid.uploaded_by.username }} on {{ vid.uploaded_on }}
+            Uploaded by {{ vid.uploaded_by.username }} on {{ vid.uploaded_on }} ({{ vid.views }} views)
         </li>
         {% endfor %}
         </ul>

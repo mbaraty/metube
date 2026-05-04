@@ -44,3 +44,29 @@ class VideoProcessingTests(TestCase):
         self.assertEqual(response.url, '/')
         self.assertEqual(Video.objects.count(), 1)
         mocked_processor.assert_called_once()
+
+
+class WatchVideoFeatureTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username='watcher', password='pass12345')
+        self.creator = get_user_model().objects.create_user(username='maker', password='pass12345')
+        self.video = Video.objects.create(
+            title='watch me', description='d', uploaded_by=self.creator, uploaded_on=timezone.now(), video_file='videos/watch.mp4', transcode_status='completed'
+        )
+
+    def test_watch_increments_views_once_per_session(self):
+        client = Client()
+        client.get(f'/videos/watch/{self.video.id}')
+        self.video.refresh_from_db()
+        self.assertEqual(self.video.views, 1)
+        client.get(f'/videos/watch/{self.video.id}')
+        self.video.refresh_from_db()
+        self.assertEqual(self.video.views, 1)
+
+    def test_add_comment_flow(self):
+        client = Client()
+        client.login(username='watcher', password='pass12345')
+        response = client.post(f'/comments/add/{self.video.id}/', {'content': 'Nice video!'})
+        self.assertEqual(response.status_code, 302)
+        self.video.refresh_from_db()
+        self.assertEqual(self.video.num_comments, 1)

@@ -57,3 +57,26 @@ class RecommendationPipelineTests(TestCase):
         titles = [rec.video.title for rec in recs]
         self.assertNotIn('private_video', titles)
         self.assertNotIn('pending_video', titles)
+
+
+class IndexFeatureTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(username='indexer', password='pass12345')
+        self.creator = get_user_model().objects.create_user(username='creator_idx', password='pass12345')
+
+    def test_search_and_sort(self):
+        Video.objects.create(title='Alpha', description='hello', uploaded_by=self.creator, uploaded_on=timezone.now(), video_file='videos/a.mp4', transcode_status='completed', num_likes=1)
+        Video.objects.create(title='Beta', description='hello', uploaded_by=self.creator, uploaded_on=timezone.now(), video_file='videos/b.mp4', transcode_status='completed', num_likes=99)
+        self.client.login(username='indexer', password='pass12345')
+        response = self.client.get('/?q=Beta&sort=popular')
+        self.assertContains(response, 'Beta')
+        listed_titles = [v.title for v in response.context['vid_list']]
+        self.assertEqual(listed_titles, ['Beta'])
+
+    def test_subscription_feed_section(self):
+        Subscription.objects.create(subscriber=self.user, creator=self.creator)
+        Video.objects.create(title='Sub feed vid', description='d', uploaded_by=self.creator, uploaded_on=timezone.now(), video_file='videos/s.mp4', transcode_status='completed')
+        self.client.login(username='indexer', password='pass12345')
+        response = self.client.get('/')
+        self.assertContains(response, 'From your subscriptions')
+        self.assertContains(response, 'Sub feed vid')

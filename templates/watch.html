@@ -1,73 +1,33 @@
 {% extends "base_generic.html" %}
-
-{% block head %}
-    <meta name="csrf-token" content="{{ csrf_token }}">
-{% endblock %}
-
+{% block head %}<meta name="csrf-token" content="{{ csrf_token }}">{% endblock %}
 {% block content %}
-    {% if vid.transcode_status != 'completed' %}
-        <p>Transcoding status: {{ vid.transcode_status }}</p>
-    {% endif %}
-    <video width="75%" height="auto" controls poster="{{ vid.thumbnail_file.url }}">
-        <source src="{{ vid.get_stream_url }}">
-    </video>
-    <div class="row">
-        <h2>{{ vid.title }}</h2>
-        {% if user and user == vid.uploaded_by %}
-            <form action="{% url 'videos:delete' vid.id %}" method="post">
-                {% csrf_token %}
-                <input type="submit" value="Delete">
-            </form>
-        {% endif %}
-    </div>
-
+    {% if vid.transcode_status != 'completed' %}<p>Transcoding status: {{ vid.transcode_status }}</p>{% endif %}
+    <video width="75%" height="auto" controls {% if vid.thumbnail_file %}poster="{{ vid.thumbnail_file.url }}"{% endif %}><source src="{{ vid.get_stream_url }}"></video>
+    <h2>{{ vid.title }}</h2>
+    <p>{{ vid.views }} views</p>
     <h5>Uploaded by {{ vid.uploaded_by.username }} on {{ vid.uploaded_on }}</h5>
-    {% if user and user.is_authenticated and user != vid.uploaded_by %}
-        <button id="sub-btn">{% if is_subscribed %}Unsubscribe{% else %}Subscribe{% endif %}</button>
-    {% endif %}
+    {% if user and user.is_authenticated and user != vid.uploaded_by %}<button id="sub-btn">{% if is_subscribed %}Unsubscribe{% else %}Subscribe{% endif %}</button>{% endif %}
     <span>Likes: <span id="like-count">{{ vid.num_likes }}</span></span>
-    {% if user and user.is_authenticated %}
-        <button id="like-btn">
-            <span id="like-text">{%  if not user_liked %}Like{% else %}Unlike{% endif %}</span>
-        </button>
-    {% endif %}
+    {% if user and user.is_authenticated %}<button id="like-btn"><span id="like-text">{% if not user_liked %}Like{% else %}Unlike{% endif %}</span></button>{% endif %}
     <p>{{ vid.description }}</p>
 
+    <h3>Comments ({{ vid.num_comments }})</h3>
     {% if user and user.is_authenticated %}
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const likeButton = document.getElementById("like-btn");
-            likeButton?.addEventListener("click", () => {
-                fetch(`{% url 'likes:toggle' vid.id %}`, {method: "POST", headers: {"X-CSRFToken": getCookie("csrftoken"),"Content-Type": "application/json"}, credentials: "same-origin"})
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById("like-text").textContent = data.liked ? "Unlike" : "Like";
-                        document.getElementById("like-count").textContent = data.likes_count;
-                    });
-            });
+        <form method="post" action="/comments/add/{{ vid.id }}/">{% csrf_token %}
+            <textarea name="content" required></textarea>
+            <button type="submit">Add comment</button>
+        </form>
+    {% endif %}
+    <ul>
+        {% for comment in comments %}
+            <li><strong>{{ comment.user.username }}</strong>: {{ comment.content }}</li>
+        {% empty %}
+            <li>No comments yet.</li>
+        {% endfor %}
+    </ul>
 
-            const subButton = document.getElementById("sub-btn");
-            subButton?.addEventListener("click", () => {
-                fetch(`/accounts/subscribe/{{ vid.uploaded_by.id }}/`, {method: "POST", headers: {"X-CSRFToken": getCookie("csrftoken")}, credentials: "same-origin"})
-                    .then(response => response.json())
-                    .then(data => { subButton.textContent = data.subscribed ? "Unsubscribe" : "Subscribe"; });
-            });
-
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== "") {
-                    const cookies = document.cookie.split(";");
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.startsWith(name + "=")) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
-        });
-    </script>
-    {%  endif %}
+    {% if related_videos %}
+        <h3>More from {{ vid.uploaded_by.username }}</h3>
+        <ul>{% for related in related_videos %}<li><a href="{{ related.get_watch_url }}">{{ related.title }}</a></li>{% endfor %}</ul>
+    {% endif %}
 {% endblock %}

@@ -32,3 +32,8 @@ def toggle_subscription(request, creator_id):
         sub.delete()
         return JsonResponse({"subscribed": False})
     return JsonResponse({"subscribed": True})
+
+
+@login_required
+def profile(request):
+    return render(request, "registration/profile.html", {"profile_user": request.user})
