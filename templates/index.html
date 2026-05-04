@@ -2,12 +2,22 @@
 {% block content %}
     <p>Welcome home!</p>
     {% if vid_list %}
+        <h3>Latest uploads</h3>
         <ul>
         {% for vid in vid_list %}
         <li>
             <a href="{{ vid.get_watch_url }}">{{ vid.title }}</a>
             Uploaded by {{ vid.uploaded_by.username }} on {{ vid.uploaded_on }}
         </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if recommended_vids %}
+        <h3>Recommended for you</h3>
+        <ul>
+        {% for vid in recommended_vids %}
+            <li><a href="{{ vid.get_watch_url }}">{{ vid.title }}</a> ({{ vid.num_likes }} likes)</li>
         {% endfor %}
         </ul>
     {% endif %}

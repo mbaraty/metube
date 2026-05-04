@@ -17,6 +17,7 @@ class Video(models.Model):
     visibility = models.CharField(choices=[('public', 'Public'), ('unlisted', 'Unlisted'), ('private', 'Private')], default='public', max_length=10)
     num_likes = models.IntegerField(default=0)
     num_comments = models.IntegerField(default=0)
+    transcode_status = models.CharField(max_length=20, default='pending')
 
     def get_watch_url(self):
         return "/videos/watch/"+str(self.id)

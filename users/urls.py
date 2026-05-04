@@ -1,11 +1,11 @@
-from django.urls.conf import path
-from django.contrib.auth import views as auth_views
-from . import views
+from django.contrib.auth import views
+from django.urls import path
 
-app_name = 'users'
+from users import views as userviews
+
 urlpatterns = [
-    path("login/", auth_views.LoginView.as_view(), name="login"),
-    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
-    path("signup/", views.SignUpView.as_view(), name="signup"),
-    path("profile/", views.ProfileView.as_view(), name="profile")
+    path('login/', views.LoginView.as_view(), name='login'),
+    path('logout/', views.LogoutView.as_view(), name='logout'),
+    path('signup/', userviews.signup, name='signup'),
+    path('subscribe/<int:creator_id>/', userviews.toggle_subscription, name='toggle_subscription'),
 ]

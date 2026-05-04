@@ -6,6 +6,7 @@ from django.utils import timezone
 import utils
 from videos.forms import UploadForm
 from videos.models import Video
+from users.models import Subscription
 
 @login_required
 def upload_video(request):
@@ -16,6 +17,7 @@ def upload_video(request):
             vid.uploaded_by = request.user
             vid.uploaded_on = timezone.now()
             vid.save()
+            utils.process_uploaded_video(vid)
             return redirect("/")
     else:
         form = UploadForm()
@@ -25,7 +27,8 @@ def upload_video(request):
 def watch_video(request, pk):
     vid = get_object_or_404(Video, pk=pk)
     if request.user.is_authenticated:
-        return render(request, "watch.html", {"vid": vid, "user": request.user, "user_liked": utils.user_has_liked(vid, request.user)})
+        is_subscribed = Subscription.objects.filter(subscriber=request.user, creator=vid.uploaded_by).exists()
+        return render(request, "watch.html", {"vid": vid, "user": request.user, "user_liked": utils.user_has_liked(vid, request.user), "is_subscribed": is_subscribed})
     else:
         return render(request, "watch.html", {"vid": vid, "user": request.user})
 def delete_video(request, pk):

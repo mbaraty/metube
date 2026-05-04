@@ -5,9 +5,11 @@
 {% endblock %}
 
 {% block content %}
-    <video width="75%" height="auto" controls>
+    {% if vid.transcode_status != 'completed' %}
+        <p>Transcoding status: {{ vid.transcode_status }}</p>
+    {% endif %}
+    <video width="75%" height="auto" controls poster="{{ vid.thumbnail_file.url }}">
         <source src="{{ vid.get_stream_url }}">
-
     </video>
     <div class="row">
         <h2>{{ vid.title }}</h2>
@@ -20,6 +22,9 @@
     </div>
 
     <h5>Uploaded by {{ vid.uploaded_by.username }} on {{ vid.uploaded_on }}</h5>
+    {% if user and user.is_authenticated and user != vid.uploaded_by %}
+        <button id="sub-btn">{% if is_subscribed %}Unsubscribe{% else %}Subscribe{% endif %}</button>
+    {% endif %}
     <span>Likes: <span id="like-count">{{ vid.num_likes }}</span></span>
     {% if user and user.is_authenticated %}
         <button id="like-btn">
@@ -28,38 +33,26 @@
     {% endif %}
     <p>{{ vid.description }}</p>
 
-    {#if user liked video5 -> display unlike button#}
-    {#    else -> display like button#}
-    {#    like will be a post request; if not logged in -> navigate to login page#}
-
     {% if user and user.is_authenticated %}
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const likeButton = document.getElementById("like-btn");
-
-            likeButton.addEventListener("click", () => {
-                fetch(`{% url 'likes:toggle' vid.id %}`, {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": getCookie("csrftoken"),
-                        "Content-Type": "application/json"
-                    },
-                    credentials: "same-origin"
-                })
+            likeButton?.addEventListener("click", () => {
+                fetch(`{% url 'likes:toggle' vid.id %}`, {method: "POST", headers: {"X-CSRFToken": getCookie("csrftoken"),"Content-Type": "application/json"}, credentials: "same-origin"})
                     .then(response => response.json())
                     .then(data => {
-                        console.log(data)
-                        if (data.liked) {
-                            document.getElementById("like-text").textContent = "Unlike";
-                        } else {
-                            document.getElementById("like-text").textContent = "Like";
-                        }
+                        document.getElementById("like-text").textContent = data.liked ? "Unlike" : "Like";
                         document.getElementById("like-count").textContent = data.likes_count;
-                    })
-                    .catch(error => console.error("Error:", error));
+                    });
             });
 
-            // Helper function to get CSRF token from cookies
+            const subButton = document.getElementById("sub-btn");
+            subButton?.addEventListener("click", () => {
+                fetch(`/accounts/subscribe/{{ vid.uploaded_by.id }}/`, {method: "POST", headers: {"X-CSRFToken": getCookie("csrftoken")}, credentials: "same-origin"})
+                    .then(response => response.json())
+                    .then(data => { subButton.textContent = data.subscribed ? "Unsubscribe" : "Subscribe"; });
+            });
+
             function getCookie(name) {
                 let cookieValue = null;
                 if (document.cookie && document.cookie !== "") {
