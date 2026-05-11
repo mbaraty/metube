@@ -1,24 +1,39 @@
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from django.http.response import HttpResponse, HttpResponseBadRequest
-from django.shortcuts import render
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 
+from users.models import Subscription
 from django.contrib.auth import get_user_model
-from django.urls.base import reverse_lazy
-from django.views.generic.edit import CreateView, UpdateView
 
 
-class SignUpView(CreateView):
-    form_class = UserCreationForm
-    success_url = reverse_lazy("users:login")
-    template_name = "registration/signup.html"
+def signup(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('/')
+    else:
+        form = UserCreationForm()
+
+    return render(request, 'registration/signup.html', {'form': form})
 
 
+@login_required
+def toggle_subscription(request, creator_id):
+    creator = get_object_or_404(get_user_model(), pk=creator_id)
+    if creator == request.user:
+        return JsonResponse({"subscribed": False, "error": "cannot subscribe to yourself"}, status=400)
 
-class ProfileView(UpdateView):
-    model = get_user_model()
-    success_url = reverse_lazy("index")
-    template_name = "registration/profile.html"
-    fields = ["username", "first_name", "last_name", "email"]  # Fixed field names
+    sub, created = Subscription.objects.get_or_create(subscriber=request.user, creator=creator)
+    if not created:
+        sub.delete()
+        return JsonResponse({"subscribed": False})
+    return JsonResponse({"subscribed": True})
 
-    def get_object(self, queryset=None):
-        return self.request.user  # Ensure the logged-in user is the object being updated
+
+@login_required
+def profile(request):
+    return render(request, "registration/profile.html", {"profile_user": request.user})
